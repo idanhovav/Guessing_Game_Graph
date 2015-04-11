@@ -1,0 +1,180 @@
+/* 
+Code Written Exclusively by Idan Hovav.
+04/10/15
+Aw yeah computer programming
+
+*/
+
+
+
+import java.util.Random;
+import processing.core.*;
+
+public class Try_New extends PApplet{
+
+	public void setup(){
+		//window width
+		float x_width = 1200;
+		float y_width = 500;
+		
+		size((int)x_width,(int)y_width);
+		background(255);
+		
+		stroke(0);
+		fill(0);
+		//labeling things
+		
+		text("Guessing Game: Relationship between Range of # and # of Guesses Needed.",
+				(x_width/5)*2, (y_width/4)*3);
+		text("X-vals = Ranges, Y-vals = Avg Num of Guesses Needed.",
+				(x_width/5)*2, 12 + (y_width/4)*3);
+		text("Relationship is a square root function.",
+				(x_width/5)*2, 24 + (y_width/4)*3);
+		
+		//margins around graph
+		float x_margin = 50;
+		float y_margin = 30;
+		
+		//width of graphs
+		float x_graph_width = x_width - (2*x_margin); 
+		float y_graph_width = y_width - (2*y_margin);
+		
+		//store average of repetitions of each set of trials in turns
+		//range of guessing game numbers is independent variable
+		//range is based on element number of turn.
+		//smart i know thx
+		
+		int[] turns = new int[200];
+		int ticker = 5;
+		int repetitions = 20;
+		int min_turns = 999999999;
+		int max_turns = 0;
+		
+		//Storing game length in turns based on range from 1-50
+		for(int i = 2; i <= turns.length+1; i++){
+			int avg = 0;
+			for(int j =0; j < repetitions; j++){
+				avg += Random_Game(i);
+			}
+			turns[i-2] = (int)(avg/repetitions);
+		}
+		//finding max and min values of turns; finding range of set.
+		for(int i = 0; i< turns.length; i++){
+			//System.out.println(turns[i]+ "  " + (i + 2));
+			if(turns[i] > max_turns)max_turns = turns[i];
+			if(turns[i] < min_turns)min_turns = turns[i];
+		}
+		System.out.println("min: " + min_turns + "  max: " + max_turns);
+		
+		//range of present y values
+		int y_range = max_turns;
+		//bottom of graph y-value b/c fuck processing for flipping it upside down
+		float y_bottom = (y_width-y_margin);
+		//ratio
+		float x_ratio = (float)(x_graph_width/(turns.length));
+		float y_ratio = (float)(y_graph_width/y_range);
+		
+		
+		
+		//axes
+		line(x_margin, y_bottom, x_width-x_margin, y_bottom);
+		line(x_margin, y_margin, x_margin, y_bottom);
+		
+		
+		//drawing x interval lines and numbers
+		//modulo if statement assures that every other value will be displayed
+		// addition/subtraction of 3 is length of tick mark
+		//subtraction of 5 in text line centers numbers
+		for(int i = 0; i <= turns.length; i++){
+			if(i % ticker == 0){
+				line(x_margin + (x_ratio*i), y_bottom - 3,
+						x_margin + (x_ratio*i), y_bottom +3);
+				text(i,x_margin - 5 + (x_ratio*i), y_width - (y_margin/2));
+			}
+			
+		}
+		
+		//drawing y interval lines and numbers
+		//adding 5 during display of text to center value
+		// 3 for drawing markings is width of tick mark
+		// -25 puts numbers to left of axis
+		for(int i = 0; i <= max_turns; i++){
+			line(x_margin -3, y_bottom - (y_ratio*i),
+					x_margin + 3, y_bottom - (y_ratio*i));
+			text(i, x_margin-25, y_bottom + 5 - (y_ratio*i));
+		}
+		
+	// PLOTTING POINTS WOOOHOO WE MADE IT
+
+		for(int i = 0; i < turns.length; i++){
+			float a = x_margin + ((i*(x_ratio)));
+			float b = y_bottom - (y_ratio*turns[i]);
+			line(a - 2, b - 2, a + 2, b + 2);
+			line(a + 2, b - 2, a - 2, b + 2);
+		
+		}
+
+		//Drawing Curve
+		//Plan:
+		//Loop thru array, count occurences of each and add up 
+		// element locations to get avg location of each value
+		//connect w/ lines cuz thats the best we got
+
+		int[] totals = new int[max_turns];
+		int[] num_of_elements = new int[max_turns];
+		
+		//result is used to store in proper location.
+		//subtract 1 from result because [0] counts occurrences of 1 guess, [1] counts 2...
+		for(int i = 0; i< turns.length; i++){
+			totals[turns[i]-1] += i;
+			num_of_elements[turns[i]-1] += 1;
+		}
+		
+		//divide total by num of elements to get averages
+		System.out.println("Averages: ");
+		float[] averages = new float[max_turns];
+		for(int i =  0; i < averages.length; i++){
+			averages[i] = (float)(totals[i])/(float)(num_of_elements[i]);
+			System.out.print(averages[i] + " , ");
+		}
+		
+		//now that we have averages for each line, all you gotta do is connect them
+		//since we subtracted one above, we add 1 here to realign with the display
+		//Example: averages[0] show the averages of 1 guess, so we have to
+		//shift that up 1 y_ratio to have it on the line of the points of 1 guess
+		for(int i = 1; i < averages.length; i++){
+			line(x_margin + (x_ratio*averages[i]), y_bottom - (y_ratio*(i+1)),
+					x_margin + (x_ratio*averages[i-1]), y_bottom - (y_ratio*(i))); 
+		}
+
+	}
+
+	private static int Random_Game(int max) {
+		
+		Random gen = new Random();
+		
+		int guess; //computer's guesses
+		int upperLim = max; // highest guess computer can make
+		int lowerLim = 0; // lowest guess computer can make
+		int turns = 0; // turns been
+		int rand_num = 1 + gen.nextInt(max-1); // number computer is guessing
+		do{
+			guess = (int)((lowerLim + upperLim)/2); //refresh guess
+			
+			if(guess < rand_num){
+				//raise lower limit accordingly
+				lowerLim = guess;		
+			}
+			if(guess > rand_num){
+				//lower upper limit accordingly
+				upperLim = guess;
+			}
+			//update to next round
+			turns += 1;
+			//just to publicize guesses
+			//System.out.print(guess + ", " + rand_num);
+			//System.out.println();
+		}while(rand_num != guess);
+		return turns;
+	}
+}
